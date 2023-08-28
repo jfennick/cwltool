@@ -968,6 +968,7 @@ hints:
 
         cudaReq, _ = self.get_requirement("http://commonwl.org/cwltool#CUDARequirement")
         if cudaReq:
+            request["cudaDeviceCount"] = 1
             request["cudaDeviceCountMin"] = 1
             request["cudaDeviceCountMax"] = 1
 
