@@ -118,10 +118,7 @@ setup(
         "spython >= 0.3.0",
     ],
     extras_require={
-        "deps": [
-            "galaxy-tool-util>=22.1.2,<23.2,!=23.0.1,!=23.0.2,!=23.0.3,!=23.0.4,!=23.0.5",
-            "galaxy-util <23.2",
-        ],
+        "deps": [],
     },
     python_requires=">=3.8, <4",
     use_scm_version=True,
