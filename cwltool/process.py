@@ -161,9 +161,6 @@ salad_files = (
 SCHEMA_CACHE: Dict[
     str, Tuple[Loader, Union[Names, SchemaParseException], CWLObjectType, Loader]
 ] = {}
-SCHEMA_FILE: Optional[CWLObjectType] = None
-SCHEMA_DIR: Optional[CWLObjectType] = None
-SCHEMA_ANY: Optional[CWLObjectType] = None
 
 custom_schemas: Dict[str, Tuple[str, str]] = {}
 
@@ -218,6 +215,23 @@ def get_schema(
         )
 
     return SCHEMA_CACHE[version]
+
+
+get_schema("v1.0")
+
+SCHEMA_ANY = cast(
+    CWLObjectType,
+    SCHEMA_CACHE["v1.0"][3].idx["https://w3id.org/cwl/salad#Any"],
+)
+SCHEMA_FILE = cast(
+    CWLObjectType,
+    SCHEMA_CACHE["v1.0"][3].idx["https://w3id.org/cwl/cwl#File"],
+)
+SCHEMA_DIR = cast(
+    CWLObjectType,
+    SCHEMA_CACHE["v1.0"][3].idx["https://w3id.org/cwl/cwl#Directory"],
+)
+AVRO_SCHEMA = make_avro_schema([SCHEMA_FILE, SCHEMA_DIR, SCHEMA_ANY], Loader({}))
 
 
 def shortname(inputid: str) -> str:
@@ -544,23 +558,8 @@ class Process(HasReqsHints, metaclass=abc.ABCMeta):
         self.metadata: CWLObjectType = getdefault(loadingContext.metadata, {})
         self.provenance_object: Optional["ProvenanceProfile"] = None
         self.parent_wf: Optional["ProvenanceProfile"] = None
-        global SCHEMA_FILE, SCHEMA_DIR, SCHEMA_ANY  # pylint: disable=global-statement
-        if SCHEMA_FILE is None or SCHEMA_ANY is None or SCHEMA_DIR is None:
-            get_schema("v1.0")
-            SCHEMA_ANY = cast(
-                CWLObjectType,
-                SCHEMA_CACHE["v1.0"][3].idx["https://w3id.org/cwl/salad#Any"],
-            )
-            SCHEMA_FILE = cast(
-                CWLObjectType,
-                SCHEMA_CACHE["v1.0"][3].idx["https://w3id.org/cwl/cwl#File"],
-            )
-            SCHEMA_DIR = cast(
-                CWLObjectType,
-                SCHEMA_CACHE["v1.0"][3].idx["https://w3id.org/cwl/cwl#Directory"],
-            )
-
-        self.names = make_avro_schema([SCHEMA_FILE, SCHEMA_DIR, SCHEMA_ANY], Loader({}))
+        global AVRO_SCHEMA  # pylint: disable=global-statement
+        self.names = copy.deepcopy(AVRO_SCHEMA)
         self.tool = toolpath_object
         debug = loadingContext.debug
         self.requirements = copy.deepcopy(getdefault(loadingContext.requirements, []))
