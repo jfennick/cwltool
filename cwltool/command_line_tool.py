@@ -1495,8 +1495,16 @@ class CommandLineTool(Process):
                             )
                         primary["format"] = format_eval
                 else:
-                    for primary in aslist(result):
-                        primary["format"] = format_field
+
+                    def recursively_insert(json: Any, key: Any, val: Any) -> Any:
+                        """Recursively inserts a value into any dictionaries"""
+                        if isinstance(json, List):
+                            return [recursively_insert(x, key, val) for x in json]
+                        if isinstance(json, Dict):
+                            json[key] = val
+                        return json
+
+                    result = recursively_insert(result, "format", format_field)
             # Ensure files point to local references outside of the run environment
             adjustFileObjs(result, revmap)
 
